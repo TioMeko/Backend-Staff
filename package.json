@@ -1,0 +1,25 @@
+{
+  "name": "backend-staff",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TioMeko/Backend-Staff.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TioMeko/Backend-Staff/issues"
+  },
+  "homepage": "https://github.com/TioMeko/Backend-Staff#readme",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "inquirer": "^9.2.7",
+    "mysql2": "^3.5.0"
+  }
+}
