@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/TioMeko/Backend-Staff#readme",
   "dependencies": {
+    "console.table": "^0.10.0",
     "dotenv": "^16.3.1",
     "inquirer": "^9.2.7",
     "mysql2": "^3.5.0"
