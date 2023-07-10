@@ -1,6 +1,6 @@
 import connection from "./lib/connection.js";
 import inquirer from "inquirer";
-import utils from "./lib/queries.js";
+import utils from "./lib/query.js";
 
 (async () => {
   try {
