@@ -8,11 +8,9 @@ import {
   addRole,
   addEmp,
   updateEmpRole,
+  updateEmpManager,
 } from "./lib/query.js";
-import {
-  getAllEmployees,
-  getAllRoles
-} from "./lib/utils.js"
+import { getAllEmployees, getAllRoles } from "./lib/utils.js";
 
 const { roles, roles_id } = await getAllRoles();
 const { employees, employees_id } = await getAllEmployees();
@@ -43,10 +41,12 @@ const { employees, employees_id } = await getAllEmployees();
         init();
         break;
       case "View All Departments":
-        viewAllDep();
+        await viewAllDep();
+        init();
         break;
       case "View All Roles":
-        viewAllRoles();
+        await viewAllRoles();
+        init();
         break;
       case "Add Department":
         inquirer
@@ -59,8 +59,11 @@ const { employees, employees_id } = await getAllEmployees();
           ])
           .then(async function (answer) {
             await addDepartment(answer.name);
-            console.log(`${answer.name} has been added to departments.`);
+            console.log(
+              `⭐ ${answer.name} has been added to departments. ⭐\n`
+            );
           });
+        await init();
         break;
 
       case "Add Role":
@@ -79,21 +82,21 @@ const { employees, employees_id } = await getAllEmployees();
             {
               type: "list",
               name: "role",
-              message:
-                "Which department does the role belong to?",
-              choices: roles
+              message: "Which department does the role belong to?",
+              choices: roles,
             },
           ])
           .then(async function (answer) {
             const roleId = roles_id[roles.indexOf(answer.role)];
             await addRole(answer.title, answer.salary, roleId);
             console.log(
-              `${answer.title} has been added to department ${answer.role} with a salary of $${answer.salary}.`
+              `⭐ ${answer.title} has been added to department ${answer.role} with a salary of $${answer.salary}. ⭐\n`
             );
           });
+        await init();
         break;
 
-      case "Add Employee":        
+      case "Add Employee":
         inquirer
           .prompt([
             {
@@ -121,58 +124,91 @@ const { employees, employees_id } = await getAllEmployees();
           ])
           .then(async function (answer) {
             const roleId = roles_id[roles.indexOf(answer.role)];
-            let managerId = employees_id[employees.indexOf(answer.manager)]
+            let managerId = employees_id[employees.indexOf(answer.manager)];
             if (managerId === 0) managerId = null;
-            await addEmp(answer.first_name, answer.last_name, roleId, managerId);
+            await addEmp(
+              answer.first_name,
+              answer.last_name,
+              roleId,
+              managerId
+            );
             console.log(
-              `${answer.first_name} ${answer.last_name} has been added with the role of ${answer.role} under the manager ${answer.manager}`
+              `⭐ ${answer.first_name} ${answer.last_name} has been added with the role of ${answer.role} under the manager ${answer.manager} ⭐\n`
             );
             connection.end();
           });
+        await init();
         break;
 
       case "Update Employee":
-          inquirer
-            .prompt([
-              {
-                type: "list",
-                name: "employee",
-                message: "Which employee would you like to update?",
-                choices: employees
-              },
-              {
-                type: "list",
-                name: "updateChoice",
-                message: "What would you like to update?",
-                choices: ["Update Role", "Update Manager"]
-              }
-            ])
-            .then(async function (firstPrompt) {
-              if (firstPrompt.updateChoice === "Update Role"){
-                inquirer
-                  .prompt([
-                    {
-                      type: "list",
-                      name: "role",
-                      message: "Which role do you want to assign to the selected employee?",
-                      choices: roles
-                    }
-                  ])
-                  .then (async function (secondPrompt) {
-                    const empId = employees_id[employees.indexOf(firstPrompt.employee)]
-                    const roleId = roles_id[roles.indexOf(secondPrompt.role)];
+        await inquirer
+          .prompt([
+            {
+              type: "list",
+              name: "employee",
+              message: "Which employee would you like to update?",
+              choices: employees,
+            },
+            {
+              type: "list",
+              name: "updateChoice",
+              message: "What would you like to update?",
+              choices: ["Update Role", "Update Manager"],
+            },
+          ])
+          .then(async function (firstPrompt) {
+            if (firstPrompt.updateChoice === "Update Role") {
+              inquirer
+                .prompt([
+                  {
+                    type: "list",
+                    name: "role",
+                    message:
+                      "Which role do you want to assign to the selected employee?",
+                    choices: roles,
+                  },
+                ])
+                .then(async function (secondPrompt) {
+                  const empId =
+                    employees_id[employees.indexOf(firstPrompt.employee)];
+                  const roleId = roles_id[roles.indexOf(secondPrompt.role)];
 
-                    await updateEmpRole(empId, roleId);
-                    console.log(`${firstPrompt.employee} has been updated with the role of ${secondPrompt.role}`)
-                    await connection.end();
-                  })
-                  
-              }else if (answer.updateChoice === "Update Manager"){
+                  await updateEmpRole(empId, roleId);
+                  console.log(
+                    `⭐ ${firstPrompt.employee} has been updated with the role of ${secondPrompt.role} ⭐\n`
+                  );
+                  await connection.end();
+                  await init();
+                });
+            } else if (firstPrompt.updateChoice === "Update Manager") {
+              inquirer
+                .prompt([
+                  {
+                    type: "list",
+                    name: "manager",
+                    message:
+                      "Which manager do you want to assign to the selected employee?",
+                    choices: employees,
+                  },
+                ])
+                .then(async function (managerPrompt) {
+                  const empId =
+                    employees_id[employees.indexOf(firstPrompt.employee)];
+                  let managerId =
+                    employees_id[employees.indexOf(managerPrompt.manager)];
+                  if (managerId === 0) managerId = null;
 
-              }
-            });
-            
-            break;
+                  await updateEmpManager(empId, managerId);
+                  console.log(
+                    `⭐ ${firstPrompt.employee} has been updated with the manager ${managerPrompt.manager} ⭐\n`
+                  );
+                  await connection.end();
+                  await init();
+                });
+            }
+          });
+
+        break;
 
       case "Exit Program":
         console.log("Goodbye!");
