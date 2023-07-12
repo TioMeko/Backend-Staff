@@ -6,6 +6,8 @@ import {
   viewAllRoles,
   addDepartment,
   addRole,
+  addEmp,
+  updateEmpRole,
 } from "./lib/query.js";
 import {
   getAllEmployees,
@@ -13,7 +15,7 @@ import {
 } from "./lib/utils.js"
 
 const { roles, roles_id } = await getAllRoles();
-const { managers, managers_id } = await getAllEmployees();
+const { employees, employees_id } = await getAllEmployees();
 
 (async function init() {
   try {
@@ -58,7 +60,6 @@ const { managers, managers_id } = await getAllEmployees();
           .then(async function (answer) {
             await addDepartment(answer.name);
             console.log(`${answer.name} has been added to departments.`);
-            await connection.end();
           });
         break;
 
@@ -89,35 +90,90 @@ const { managers, managers_id } = await getAllEmployees();
             console.log(
               `${answer.title} has been added to department ${answer.role} with a salary of $${answer.salary}.`
             );
-            await connection.end();
           });
         break;
+
       case "Add Employee":        
-        inquirer.prompt([
-          {
-            type: "input",
-            name: "first_name",
-            message: "What is the first name of the new employee?",
-          },
-          {
-            type: "input",
-            name: "last_name",
-            message: "What is the last name of the new employee?",
-          },
-          {
-            type: "list",
-            name: "role",
-            message: "What title will the new employee have?",
-            choices: roles,
-          },
-          {
-            type: "list",
-            name: "manager",
-            message: "What manager will the new employee have?",
-            choices: managers,
-          },
-        ]);
+        inquirer
+          .prompt([
+            {
+              type: "input",
+              name: "first_name",
+              message: "What is the first name of the new employee?",
+            },
+            {
+              type: "input",
+              name: "last_name",
+              message: "What is the last name of the new employee?",
+            },
+            {
+              type: "list",
+              name: "role",
+              message: "What title will the new employee have?",
+              choices: roles,
+            },
+            {
+              type: "list",
+              name: "manager",
+              message: "What manager will the new employee have?",
+              choices: employees,
+            },
+          ])
+          .then(async function (answer) {
+            const roleId = roles_id[roles.indexOf(answer.role)];
+            let managerId = employees_id[employees.indexOf(answer.manager)]
+            if (managerId === 0) managerId = null;
+            await addEmp(answer.first_name, answer.last_name, roleId, managerId);
+            console.log(
+              `${answer.first_name} ${answer.last_name} has been added with the role of ${answer.role} under the manager ${answer.manager}`
+            );
+            connection.end();
+          });
         break;
+
+      case "Update Employee":
+          inquirer
+            .prompt([
+              {
+                type: "list",
+                name: "employee",
+                message: "Which employee would you like to update?",
+                choices: employees
+              },
+              {
+                type: "list",
+                name: "updateChoice",
+                message: "What would you like to update?",
+                choices: ["Update Role", "Update Manager"]
+              }
+            ])
+            .then(async function (firstPrompt) {
+              if (firstPrompt.updateChoice === "Update Role"){
+                inquirer
+                  .prompt([
+                    {
+                      type: "list",
+                      name: "role",
+                      message: "Which role do you want to assign to the selected employee?",
+                      choices: roles
+                    }
+                  ])
+                  .then (async function (secondPrompt) {
+                    const empId = employees_id[employees.indexOf(firstPrompt.employee)]
+                    const roleId = roles_id[roles.indexOf(secondPrompt.role)];
+
+                    await updateEmpRole(empId, roleId);
+                    console.log(`${firstPrompt.employee} has been updated with the role of ${secondPrompt.role}`)
+                    await connection.end();
+                  })
+                  
+              }else if (answer.updateChoice === "Update Manager"){
+
+              }
+            });
+            
+            break;
+
       case "Exit Program":
         console.log("Goodbye!");
         connection.end();
