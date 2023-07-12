@@ -13,6 +13,9 @@ Backend-Staff is a command-line application built with Node.js, Inquirer, and My
 ## Usage Guide
 Once the application is running, you will be presented with a menu of options to interact with the employee database. Simply follow the prompts and provide the necessary information to perform various operations, such as adding employees, updating employee information, or deleting data.
 
+## Video Guide
+![Untitled_ Jul 12, 2023 11_15 AM webm](https://github.com/TioMeko/Backend-Staff/assets/61386052/8ab13e77-9da8-4f12-af31-8bc2359946f6)
+
 ## Documentation
 Currently, there is no additional documentation available for this project.
 
