@@ -10,6 +10,8 @@ import {
   addEmp,
   updateEmpRole,
   updateEmpManager,
+  viewByManager,
+  viewByDep,
 } from "./lib/query.js";
 import { getAllEmployees, getAllRoles } from "./lib/utils.js";
 
@@ -30,6 +32,8 @@ const { employees, employees_id } = await getAllEmployees();
           "View All Departments",
           "View All Roles",
           "View All Employees",
+          "View Employees By Manager",
+          "View Employees By Department",
           "Add Department",
           "Add Role",
           "Add Employee",
@@ -230,10 +234,47 @@ const { employees, employees_id } = await getAllEmployees();
 
         break;
 
+        case "View Employees By Manager":
+          inquirer
+                .prompt([
+                  {
+                    type: "list",
+                    name: "manager",
+                    message:
+                      "Which manager would you like to see the employees for?",
+                    choices: employees,
+                  },
+                ])
+                .then(async function (managerPrompt) {
+                  let managerId = employees_id[employees.indexOf(managerPrompt.manager)];
+                  await viewByManager(managerId);
+                  await init();
+                })
+        break;
+
+        case "View Employees By Department":
+          inquirer
+                .prompt([
+                  {
+                    type: "list",
+                    name: "department",
+                    message:
+                      "Which department would you like to see the employees for?",
+                    choices: roles,
+                  },
+                ])
+                .then(async function (departmentPrompt) {
+                  let depId = roles_id[roles.indexOf(departmentPrompt.department)];
+                  await viewByDep(depId);
+                  await init();
+                })
+        break;
+          
       case "Exit Program":
         console.log("Goodbye!");
         connection.end();
         break;
+
       default:
         console.log("Invalid choice");
         await connection.end();
