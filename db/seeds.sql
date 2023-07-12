@@ -23,18 +23,34 @@ INSERT INTO role (title, salary, department_id)
         ("Director of Finance", 210000, 6),
         ("IT Director", 220000, 6);
 
-INSERT INTO employee (first_name, last_name, role_id, manager_id)
+INSERT INTO employee (first_name, last_name, role_id)
     VALUES
-        ("Paul", "Carapace", 13, 2), -- IT Director
-        ("Meko", "Appleseed", 11, NULL), -- Director of Operations
-        ("Monkey", "Artas", 12, 2), -- Director of Finance
-        ("Johnny", "Tsunami", 2, 1),
-        ("Captain", "Hook", 1, 1),
-        ("Buzz", "Lightyear", 3, 3),
-        ("Ben", "Pencili", 4, 3),
-        ("John", "Doe", 5, 1),
-        ("Jane", "Smith", 6, 1),
-        ("Michael", "Johnson", 7, 1),
-        ("Emily", "Williams", 8, 1),
-        ("David", "Brown", 9, 2),
-        ("Sarah", "Davis", 10, 2);
+        ("Paul", "Carapace", 13), -- IT Director
+        ("Meko", "Appleseed", 11), -- Director of Operations
+        ("Monkey", "Artas", 12), -- Director of Finance
+        ("Johnny", "Tsunami", 1),
+        ("Captain", "Hook", 2),
+        ("Buzz", "Lightyear", 3),
+        ("Ben", "Pencili", 4),
+        ("John", "Doe", 5),
+        ("Jane", "Smith", 6),
+        ("Michael", "Johnson", 7),
+        ("Emily", "Williams", 8),
+        ("David", "Brown", 9),
+        ("Sarah", "Davis", 10);
+
+UPDATE employee
+    SET manager_id = (
+        CASE
+            WHEN role_id = 2 THEN 1
+            WHEN role_id = 1 THEN 1
+            WHEN role_id = 3 THEN 3
+            WHEN role_id = 4 THEN 3
+            WHEN role_id = 5 THEN 1
+            WHEN role_id = 6 THEN 1
+            WHEN role_id = 7 THEN 1
+            WHEN role_id = 8 THEN 1
+            WHEN role_id = 9 THEN 2
+            WHEN role_id = 10 THEN 2
+        END
+    );
