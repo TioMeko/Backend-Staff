@@ -16,6 +16,7 @@ import {
     const { employees, employees_id } = await getAllEmployees();
     const { departments, departments_id } = await getAllDep();
     const { managers, managers_id } = await getAllManagers();
+
     // Prompt user for the desired action
     const data = await inquirer.prompt([
       {
@@ -40,22 +41,24 @@ import {
       },
     ]);
 
-    // Perform actions based on user's choice
+    // Perform actions based on the user's choice
     switch (data.choice) {
       case "View All Employees":
         await query.viewAllEmp();
         init();
         break;
+
       case "View All Departments":
         await query.viewAllDep();
         init();
         break;
+
       case "View All Roles":
         await query.viewAllRoles();
         init();
         break;
+
       case "Add Department":
-        // Prompt user to enter new department name
         await inquirer
           .prompt([
             {
@@ -65,17 +68,13 @@ import {
             },
           ])
           .then(async function (answer) {
-            // Add the new department
             await query.addDepartment(answer.name);
-            console.log(
-              `⭐ ${answer.name} has been added to departments. ⭐\n`
-            );
+            console.log(`⭐ ${answer.name} has been added to departments. ⭐\n`);
           });
         await init();
         break;
 
       case "Add Role":
-        // Prompt user to enter new role details
         await inquirer
           .prompt([
             {
@@ -96,9 +95,7 @@ import {
             },
           ])
           .then(async function (answer) {
-            // Get the ID of the selected role
             let depId = departments_id[departments.indexOf(answer.department)];
-            // Add the new role
             await query.addRole(answer.title, answer.salary, depId);
             console.log(
               `⭐ ${answer.title} has been added to department ${answer.department} with a salary of $${answer.salary}. ⭐\n`
@@ -108,7 +105,6 @@ import {
         break;
 
       case "Add Employee":
-        // Prompt user to enter new employee details
         await inquirer
           .prompt([
             {
@@ -135,11 +131,9 @@ import {
             },
           ])
           .then(async function (answer) {
-            // Get the ID of the selected role and manager
             const roleId = roles_id[roles.indexOf(answer.role)];
             let managerId = managers_id[managers.indexOf(answer.manager)];
             if (managerId === 0) managerId = null;
-            // Add the new employee
             await query.addEmp(
               answer.first_name,
               answer.last_name,
@@ -154,7 +148,6 @@ import {
         break;
 
       case "Update Employee":
-        // Prompt user to select an employee and update choice
         await inquirer
           .prompt([
             {
@@ -172,7 +165,6 @@ import {
           ])
           .then(async function (firstPrompt) {
             if (firstPrompt.updateChoice === "Update Role") {
-              // Prompt user to select a new role for the employee
               inquirer
                 .prompt([
                   {
@@ -184,12 +176,10 @@ import {
                   },
                 ])
                 .then(async function (secondPrompt) {
-                  // Get the IDs of the employee and selected role
                   const empId =
                     employees_id[employees.indexOf(firstPrompt.employee)];
                   const roleId = roles_id[roles.indexOf(secondPrompt.role)];
 
-                  // Update the employee's role
                   await query.updateEmpRole(empId, roleId);
                   console.log(
                     `⭐ ${firstPrompt.employee} has been updated with the role of ${secondPrompt.role} ⭐\n`
@@ -197,7 +187,6 @@ import {
                   await init();
                 });
             } else if (firstPrompt.updateChoice === "Update Manager") {
-              // Prompt user to select a new manager for the employee
               inquirer
                 .prompt([
                   {
@@ -209,14 +198,12 @@ import {
                   },
                 ])
                 .then(async function (managerPrompt) {
-                  // Get the IDs of the employee and selected manager
                   const empId =
                     employees_id[employees.indexOf(firstPrompt.employee)];
                   let managerId =
                     employees_id[employees.indexOf(managerPrompt.manager)];
                   if (managerId === 0) managerId = null;
 
-                  // Update the employee's manager
                   await query.updateEmpManager(empId, managerId);
                   console.log(
                     `⭐ ${firstPrompt.employee} has been updated with the manager ${managerPrompt.manager} ⭐\n`
@@ -270,22 +257,22 @@ import {
             {
               type: "list",
               name: "department",
-              message: "Which department would you like delete?",
+              message: "Which department would you like to delete?",
               choices: departments,
             },
             {
               type: "confirm",
               name: "confirm",
-              message: `Are you sure you want to delete this department?`
-            }
+              message: `Are you sure you want to delete this department?`,
+            },
           ])
           .then(async function (answer) {
-            if (answer.confirm === true){
+            if (answer.confirm === true) {
               let depId = departments_id[departments.indexOf(answer.department)];
               await query.deleteDep(depId);
               console.log(`⭐ ${answer.department} has been deleted! ⭐\n`);
               await init();
-            }else await init();
+            } else await init();
           });
         break;
 
@@ -295,17 +282,17 @@ import {
             {
               type: "list",
               name: "role",
-              message: "Which role would you like delete?",
+              message: "Which role would you like to delete?",
               choices: roles,
             },
             {
               type: "confirm",
               name: "confirm",
-              message: `Are you sure you want to delete this role?`
-            }
+              message: `Are you sure you want to delete this role?`,
+            },
           ])
           .then(async function (answer) {
-            if (answer.confirm === true){
+            if (answer.confirm === true) {
               let roleId = roles_id[roles.indexOf(answer.role)];
               await query.deleteRole(roleId);
               console.log(`⭐ ${answer.role} has been deleted! ⭐\n`);
@@ -320,25 +307,25 @@ import {
             {
               type: "list",
               name: "employee",
-              message: "Which employee would you like delete?",
+              message: "Which employee would you like to delete?",
               choices: employees,
             },
             {
               type: "confirm",
               name: "confirm",
-              message: `Are you sure you want to delete this employee?`
-            }
+              message: `Are you sure you want to delete this employee?`,
+            },
           ])
           .then(async function (answer) {
-            if (answer.confirm === true){
+            if (answer.confirm === true) {
               let empId = employees_id[employees.indexOf(answer.employee)];
               if (answer.employee === "None") await init();
-              else{
-              await query.deleteEmp(empId);
-              console.log(`⭐ ${answer.employee} has been deleted! ⭐\n`);
-              await init();
+              else {
+                await query.deleteEmp(empId);
+                console.log(`⭐ ${answer.employee} has been deleted! ⭐\n`);
+                await init();
               }
-          }else await init();
+            } else await init();
           });
         break;
 
