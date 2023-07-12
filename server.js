@@ -1,27 +1,21 @@
 // Import necessary modules and functions
 import connection from "./lib/connection.js";
 import inquirer from "inquirer";
+import * as query from "./lib/query.js";
 import {
-  viewAllEmp,
-  viewAllDep,
-  viewAllRoles,
-  addDepartment,
-  addRole,
-  addEmp,
-  updateEmpRole,
-  updateEmpManager,
-  viewByManager,
-  viewByDep,
-} from "./lib/query.js";
-import { getAllEmployees, getAllRoles } from "./lib/utils.js";
-
-// Get all roles and employees data
-const { roles, roles_id } = await getAllRoles();
-const { employees, employees_id } = await getAllEmployees();
+  getAllDep,
+  getAllEmployees,
+  getAllRoles,
+  getAllManagers,
+} from "./lib/utils.js";
 
 // Main function to initialize the program
 (async function init() {
   try {
+    const { roles, roles_id } = await getAllRoles();
+    const { employees, employees_id } = await getAllEmployees();
+    const { departments, departments_id } = await getAllDep();
+    const { managers, managers_id } = await getAllManagers();
     // Prompt user for the desired action
     const data = await inquirer.prompt([
       {
@@ -38,6 +32,9 @@ const { employees, employees_id } = await getAllEmployees();
           "Add Role",
           "Add Employee",
           "Update Employee",
+          "Delete Department",
+          "Delete Role",
+          "Delete Employee",
           "Exit Program",
         ],
       },
@@ -46,20 +43,20 @@ const { employees, employees_id } = await getAllEmployees();
     // Perform actions based on user's choice
     switch (data.choice) {
       case "View All Employees":
-        await viewAllEmp();
+        await query.viewAllEmp();
         init();
         break;
       case "View All Departments":
-        await viewAllDep();
+        await query.viewAllDep();
         init();
         break;
       case "View All Roles":
-        await viewAllRoles();
+        await query.viewAllRoles();
         init();
         break;
       case "Add Department":
         // Prompt user to enter new department name
-        inquirer
+        await inquirer
           .prompt([
             {
               type: "input",
@@ -69,7 +66,7 @@ const { employees, employees_id } = await getAllEmployees();
           ])
           .then(async function (answer) {
             // Add the new department
-            await addDepartment(answer.name);
+            await query.addDepartment(answer.name);
             console.log(
               `⭐ ${answer.name} has been added to departments. ⭐\n`
             );
@@ -79,7 +76,7 @@ const { employees, employees_id } = await getAllEmployees();
 
       case "Add Role":
         // Prompt user to enter new role details
-        inquirer
+        await inquirer
           .prompt([
             {
               type: "input",
@@ -93,18 +90,18 @@ const { employees, employees_id } = await getAllEmployees();
             },
             {
               type: "list",
-              name: "role",
+              name: "department",
               message: "Which department does the role belong to?",
-              choices: roles,
+              choices: departments,
             },
           ])
           .then(async function (answer) {
             // Get the ID of the selected role
-            const roleId = roles_id[roles.indexOf(answer.role)];
+            let depId = departments_id[departments.indexOf(answer.department)];
             // Add the new role
-            await addRole(answer.title, answer.salary, roleId);
+            await query.addRole(answer.title, answer.salary, depId);
             console.log(
-              `⭐ ${answer.title} has been added to department ${answer.role} with a salary of $${answer.salary}. ⭐\n`
+              `⭐ ${answer.title} has been added to department ${answer.department} with a salary of $${answer.salary}. ⭐\n`
             );
           });
         await init();
@@ -112,7 +109,7 @@ const { employees, employees_id } = await getAllEmployees();
 
       case "Add Employee":
         // Prompt user to enter new employee details
-        inquirer
+        await inquirer
           .prompt([
             {
               type: "input",
@@ -134,16 +131,16 @@ const { employees, employees_id } = await getAllEmployees();
               type: "list",
               name: "manager",
               message: "What manager will the new employee have?",
-              choices: employees,
+              choices: managers,
             },
           ])
           .then(async function (answer) {
             // Get the ID of the selected role and manager
             const roleId = roles_id[roles.indexOf(answer.role)];
-            let managerId = employees_id[employees.indexOf(answer.manager)];
+            let managerId = managers_id[managers.indexOf(answer.manager)];
             if (managerId === 0) managerId = null;
             // Add the new employee
-            await addEmp(
+            await query.addEmp(
               answer.first_name,
               answer.last_name,
               roleId,
@@ -152,9 +149,8 @@ const { employees, employees_id } = await getAllEmployees();
             console.log(
               `⭐ ${answer.first_name} ${answer.last_name} has been added with the role of ${answer.role} under the manager ${answer.manager} ⭐\n`
             );
-            connection.end();
           });
-        await init();
+        init();
         break;
 
       case "Update Employee":
@@ -194,11 +190,10 @@ const { employees, employees_id } = await getAllEmployees();
                   const roleId = roles_id[roles.indexOf(secondPrompt.role)];
 
                   // Update the employee's role
-                  await updateEmpRole(empId, roleId);
+                  await query.updateEmpRole(empId, roleId);
                   console.log(
                     `⭐ ${firstPrompt.employee} has been updated with the role of ${secondPrompt.role} ⭐\n`
                   );
-                  await connection.end();
                   await init();
                 });
             } else if (firstPrompt.updateChoice === "Update Manager") {
@@ -222,11 +217,10 @@ const { employees, employees_id } = await getAllEmployees();
                   if (managerId === 0) managerId = null;
 
                   // Update the employee's manager
-                  await updateEmpManager(empId, managerId);
+                  await query.updateEmpManager(empId, managerId);
                   console.log(
                     `⭐ ${firstPrompt.employee} has been updated with the manager ${managerPrompt.manager} ⭐\n`
                   );
-                  await connection.end();
                   await init();
                 });
             }
@@ -234,42 +228,120 @@ const { employees, employees_id } = await getAllEmployees();
 
         break;
 
-        case "View Employees By Manager":
-          inquirer
-                .prompt([
-                  {
-                    type: "list",
-                    name: "manager",
-                    message:
-                      "Which manager would you like to see the employees for?",
-                    choices: employees,
-                  },
-                ])
-                .then(async function (managerPrompt) {
-                  let managerId = employees_id[employees.indexOf(managerPrompt.manager)];
-                  await viewByManager(managerId);
-                  await init();
-                })
+      case "View Employees By Manager":
+        inquirer
+          .prompt([
+            {
+              type: "list",
+              name: "manager",
+              message: "Which manager would you like to see the employees for?",
+              choices: managers,
+            },
+          ])
+          .then(async function (managerPrompt) {
+            let managerId =
+              managers_id[managers.indexOf(managerPrompt.manager)];
+            await query.viewByManager(managerId);
+            await init();
+          });
         break;
 
-        case "View Employees By Department":
-          inquirer
-                .prompt([
-                  {
-                    type: "list",
-                    name: "department",
-                    message:
-                      "Which department would you like to see the employees for?",
-                    choices: roles,
-                  },
-                ])
-                .then(async function (departmentPrompt) {
-                  let depId = roles_id[roles.indexOf(departmentPrompt.department)];
-                  await viewByDep(depId);
-                  await init();
-                })
+      case "View Employees By Department":
+        inquirer
+          .prompt([
+            {
+              type: "list",
+              name: "department",
+              message:
+                "Which department would you like to see the employees for?",
+              choices: departments,
+            },
+          ])
+          .then(async function (answer) {
+            let depId = departments_id[departments.indexOf(answer.department)];
+            await query.viewByDep(depId);
+            await init();
+          });
         break;
-          
+
+      case "Delete Department":
+        inquirer
+          .prompt([
+            {
+              type: "list",
+              name: "department",
+              message: "Which department would you like delete?",
+              choices: departments,
+            },
+            {
+              type: "confirm",
+              name: "confirm",
+              message: `Are you sure you want to delete this department?`
+            }
+          ])
+          .then(async function (answer) {
+            if (answer.confirm === true){
+              let depId = departments_id[departments.indexOf(answer.department)];
+              await query.deleteDep(depId);
+              console.log(`⭐ ${answer.department} has been deleted! ⭐\n`);
+              await init();
+            }else await init();
+          });
+        break;
+
+      case "Delete Role":
+        inquirer
+          .prompt([
+            {
+              type: "list",
+              name: "role",
+              message: "Which role would you like delete?",
+              choices: roles,
+            },
+            {
+              type: "confirm",
+              name: "confirm",
+              message: `Are you sure you want to delete this role?`
+            }
+          ])
+          .then(async function (answer) {
+            if (answer.confirm === true){
+              let roleId = roles_id[roles.indexOf(answer.role)];
+              await query.deleteRole(roleId);
+              console.log(`⭐ ${answer.role} has been deleted! ⭐\n`);
+              await init();
+            } else await init();
+          });
+        break;
+
+      case "Delete Employee":
+        inquirer
+          .prompt([
+            {
+              type: "list",
+              name: "employee",
+              message: "Which employee would you like delete?",
+              choices: employees,
+            },
+            {
+              type: "confirm",
+              name: "confirm",
+              message: `Are you sure you want to delete this employee?`
+            }
+          ])
+          .then(async function (answer) {
+            if (answer.confirm === true){
+              let empId = employees_id[employees.indexOf(answer.employee)];
+              if (answer.employee === "None") await init();
+              else{
+              await query.deleteEmp(empId);
+              console.log(`⭐ ${answer.employee} has been deleted! ⭐\n`);
+              await init();
+              }
+          }else await init();
+          });
+        break;
+
       case "Exit Program":
         console.log("Goodbye!");
         connection.end();
