@@ -1,3 +1,4 @@
+// Import necessary modules and functions
 import connection from "./lib/connection.js";
 import inquirer from "inquirer";
 import {
@@ -12,11 +13,14 @@ import {
 } from "./lib/query.js";
 import { getAllEmployees, getAllRoles } from "./lib/utils.js";
 
+// Get all roles and employees data
 const { roles, roles_id } = await getAllRoles();
 const { employees, employees_id } = await getAllEmployees();
 
+// Main function to initialize the program
 (async function init() {
   try {
+    // Prompt user for the desired action
     const data = await inquirer.prompt([
       {
         type: "list",
@@ -35,6 +39,7 @@ const { employees, employees_id } = await getAllEmployees();
       },
     ]);
 
+    // Perform actions based on user's choice
     switch (data.choice) {
       case "View All Employees":
         await viewAllEmp();
@@ -49,6 +54,7 @@ const { employees, employees_id } = await getAllEmployees();
         init();
         break;
       case "Add Department":
+        // Prompt user to enter new department name
         inquirer
           .prompt([
             {
@@ -58,6 +64,7 @@ const { employees, employees_id } = await getAllEmployees();
             },
           ])
           .then(async function (answer) {
+            // Add the new department
             await addDepartment(answer.name);
             console.log(
               `⭐ ${answer.name} has been added to departments. ⭐\n`
@@ -67,6 +74,7 @@ const { employees, employees_id } = await getAllEmployees();
         break;
 
       case "Add Role":
+        // Prompt user to enter new role details
         inquirer
           .prompt([
             {
@@ -87,7 +95,9 @@ const { employees, employees_id } = await getAllEmployees();
             },
           ])
           .then(async function (answer) {
+            // Get the ID of the selected role
             const roleId = roles_id[roles.indexOf(answer.role)];
+            // Add the new role
             await addRole(answer.title, answer.salary, roleId);
             console.log(
               `⭐ ${answer.title} has been added to department ${answer.role} with a salary of $${answer.salary}. ⭐\n`
@@ -97,6 +107,7 @@ const { employees, employees_id } = await getAllEmployees();
         break;
 
       case "Add Employee":
+        // Prompt user to enter new employee details
         inquirer
           .prompt([
             {
@@ -123,9 +134,11 @@ const { employees, employees_id } = await getAllEmployees();
             },
           ])
           .then(async function (answer) {
+            // Get the ID of the selected role and manager
             const roleId = roles_id[roles.indexOf(answer.role)];
             let managerId = employees_id[employees.indexOf(answer.manager)];
             if (managerId === 0) managerId = null;
+            // Add the new employee
             await addEmp(
               answer.first_name,
               answer.last_name,
@@ -141,6 +154,7 @@ const { employees, employees_id } = await getAllEmployees();
         break;
 
       case "Update Employee":
+        // Prompt user to select an employee and update choice
         await inquirer
           .prompt([
             {
@@ -158,6 +172,7 @@ const { employees, employees_id } = await getAllEmployees();
           ])
           .then(async function (firstPrompt) {
             if (firstPrompt.updateChoice === "Update Role") {
+              // Prompt user to select a new role for the employee
               inquirer
                 .prompt([
                   {
@@ -169,10 +184,12 @@ const { employees, employees_id } = await getAllEmployees();
                   },
                 ])
                 .then(async function (secondPrompt) {
+                  // Get the IDs of the employee and selected role
                   const empId =
                     employees_id[employees.indexOf(firstPrompt.employee)];
                   const roleId = roles_id[roles.indexOf(secondPrompt.role)];
 
+                  // Update the employee's role
                   await updateEmpRole(empId, roleId);
                   console.log(
                     `⭐ ${firstPrompt.employee} has been updated with the role of ${secondPrompt.role} ⭐\n`
@@ -181,6 +198,7 @@ const { employees, employees_id } = await getAllEmployees();
                   await init();
                 });
             } else if (firstPrompt.updateChoice === "Update Manager") {
+              // Prompt user to select a new manager for the employee
               inquirer
                 .prompt([
                   {
@@ -192,12 +210,14 @@ const { employees, employees_id } = await getAllEmployees();
                   },
                 ])
                 .then(async function (managerPrompt) {
+                  // Get the IDs of the employee and selected manager
                   const empId =
                     employees_id[employees.indexOf(firstPrompt.employee)];
                   let managerId =
                     employees_id[employees.indexOf(managerPrompt.manager)];
                   if (managerId === 0) managerId = null;
 
+                  // Update the employee's manager
                   await updateEmpManager(empId, managerId);
                   console.log(
                     `⭐ ${firstPrompt.employee} has been updated with the manager ${managerPrompt.manager} ⭐\n`
